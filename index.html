@@ -3,170 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soukassou - Application Hors-Ligne</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#28a745">
+    <title>Soukassou Pro - Écosystème Ultime & Autonome</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF pour la génération de contrats et quittances -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px;">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
-    <!-- BARRE D'ÉTAT DU RÉSEAU -->
-    <div id="networkStatus" style="text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 15px; background-color: #d4edda; color: #155724;">
-        🟢 Mode En Ligne
-    </div>
+    <!-- En-tête Principal Soukassou -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 p-2.5 rounded-xl shadow-md text-slate-900 font-bold text-xl flex items-center justify-center">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        SOUKASSOU <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">PRO v17.0</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Écosystème Commercial, Logistique & Financier Ultime</p>
+                </div>
+            </div>
 
-    <!-- BLOC PRINCIPAL SOUKASSOU -->
-    <div class="payment-section" style="max-width: 450px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        
-        <div style="text-align: center; margin-bottom: 15px;">
-            <span style="background-color: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">
-                ⚡ 100% Fonctionnel Hors-Ligne
-            </span>
+            <!-- Barre d'État / Rôle Actif / Infos Numéro Mobile Money -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="hidden md:flex flex-col text-right text-xs bg-slate-900/60 border border-slate-700 px-3 py-1.5 rounded-lg">
+                    <span class="text-slate-400">Paiement Officiel Tchad:</span>
+                    <span class="font-mono text-emerald-400 font-bold"><i class="fa-solid fa-mobile-screen-button mr-1"></i> 235 68 21 26 27</span>
+                </div>
+                <div id="activeRoleBadge" class="bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield"></i> <span id="currentRoleText">Propriétaire / Admin</span>
+                </div>
+                <button onclick="openPanicModal()" class="bg-rose-600/20 border border-rose-500/40 text-rose-400 hover:bg-rose-600/30 text-xs px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5" title="Mode Anti-Braquage / Fausse Caisse">
+                    <i class="fa-solid fa-shield-halved"></i> Panic Lock
+                </button>
+            </div>
         </div>
+    </header>
 
-        <h2 style="margin-top: 5px; color: #2c3e50; text-align: center;">Soukassou</h2>
-        <p style="text-align: center; font-size: 13px; color: #666; margin-bottom: 20px;">Plateforme de Virement & Validation Sécurisée</p>
-        
-        <!-- Coordonnées Marchand -->
-        <div style="background-color: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #28a745;">
-            <small style="color: #666;">Bénéficiaire Officiel :</small><br>
-            <strong style="font-size: 1.1em; color: #1b5e20;">+235 68 21 26 27</strong> (Airtel / Moov)
-        </div>
-
-        <form id="paymentForm" onsubmit="validerTransactionHorsLigne(event)">
-            
-            <!-- Numéro du Client -->
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Votre numéro de téléphone :</label>
-                <input type="tel" id="phone" placeholder="ex: 68212627" required pattern="^[0-9]{8,12}$" style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
-            </div>
-
-            <!-- Opérateur Mobile Money -->
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Réseau Mobile Money :</label>
-                <select id="operator" required style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; background-color: #fff;">
-                    <option value="">-- Choisir le réseau --</option>
-                    <option value="Airtel Money">Airtel Money Tchad (*150#)</option>
-                    <option value="Moov Money">Moov Money Tchad / Flooz (*800#)</option>
-                </select>
-            </div>
-
-            <!-- ID / Référence SMS -->
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">ID / Réf. Transaction SMS <span style="color: red;">*</span> :</label>
-                <input type="text" id="txId" placeholder="ex: TXN123456789 ou MP261022.0001" required style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
-                <small style="color: #666; font-size: 11px;">Entrez la référence reçue par SMS.</small>
-            </div>
-
-            <!-- Montant Verrouillé -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Montant fixe contrôlé (FCFA) :</label>
-                <input type="number" id="amount" value="14990" readonly style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; background-color: #e9ecef; font-weight: bold; color: #495057;">
-            </div>
-
-            <!-- Bouton Validation -->
-            <button type="submit" id="submitBtn" style="width: 100%; background-color: #28a745; color: white; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">
-                🔒 Valider Hors-Ligne / En Ligne
+    <!-- Navigation par Onglets Principaux -->
+    <nav class="bg-slate-800/80 border-b border-slate-700 overflow-x-auto scrollbar-none sticky top-[65px] z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 flex space-x-2 py-2 whitespace-nowrap">
+            <button onclick="switchTab('dashboard')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition bg-emerald-600 text-white shadow" data-tab="dashboard">
+                <i class="fa-solid fa-chart-pie mr-1.5"></i> Tableau de Bord
             </button>
-        </form>
-    </div>
+            <button onclick="switchTab('pos')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="pos">
+                <i class="fa-solid fa-cash-register mr-1.5"></i> Caisse & Ventes
+            </button>
+            <button onclick="switchTab('marketplace')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="marketplace">
+                <i class="fa-solid fa-globe mr-1.5"></i> Vitrine & Marché
+            </button>
+            <button onclick="switchTab('deliveries')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="deliveries">
+                <i class="fa-solid fa-truck-fast mr-1.5"></i> Logistique & Livreurs
+            </button>
+            <button onclick="switchTab('bills')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="bills">
+                <i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> Factures & Versements
+            </button>
+            <button onclick="switchTab('subscriptions')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="subscriptions">
+                <i class="fa-solid fa-calendar-check mr-1.5"></i> Mensualités & Abonnements
+            </button>
+            <button onclick="switchTab('contracts')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="contracts">
+                <i class="fa-solid fa-file-contract mr-1.5"></i> Contrats PDF & Sign
+            </button>
+            <button onclick="switchTab('suppliers')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="suppliers">
+                <i class="fa-solid fa-boxes-stacked mr-1.5"></i> Fournisseurs & Achats
+            </button>
+            <button onclick="switchTab('chat')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="chat">
+                <i class="fa-solid fa-comments mr-1.5"></i> Négociation & Chat
+            </button>
+            <button onclick="switchTab('settings')" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-700/60" data-tab="settings">
+                <i class="fa-solid fa-gear mr-1.5"></i> Paramètres & IA
+            </button>
+        </div>
+    </nav>
 
-    <!-- ACCÈS ADMINISTRATEUR -->
-    <div style="text-align: center; margin-top: 30px;">
-        <button onclick="seConnecterAdmin()" style="background: none; border: none; color: #aaa; font-size: 11px; cursor: pointer; text-decoration: underline;">
-            🔐 Administration Soukassou (Local)
-        </button>
-    </div>
+    <!-- Contenu Principal Dynamique -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6">
 
-    <!-- SCRIPT HORS-LIGNE -->
-    <script>
-        const MON_NUMERO_TELEPHONE = "23568212627";
-        const MONTANT_STRICT = 14990;
-        const MOT_DE_PASSE_ADMIN = "28121955@Uy";
+        <!-- 1. ONGLET TABLEAU DE BORD -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Chiffre d'Affaires du Jour</p>
+                    <h3 id="dashCA" class="text-2xl font-bold text-emerald-400 mt-2">0 FCFA</h3>
+                    <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> +12% vs hier</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Trésorerie Prédictive (30j)</p>
+                    <h3 id="dashCashflow" class="text-2xl font-bold text-teal-400 mt-2">0 FCFA</h3>
+                    <p class="text-xs text-slate-500 mt-1">Basé sur abonnements & échéances</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Clients & Abonnés Actifs</p>
+                    <h3 id="dashClientsCount" class="text-2xl font-bold text-indigo-400 mt-2">0</h3>
+                    <p class="text-xs text-slate-500 mt-1">Score moyen de risque: <span id="avgRiskScore" class="text-emerald-400 font-bold">95%</span></p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow">
+                    <p class="text-xs text-slate-400 font-semibold uppercase">Commandes & Livraisons</p>
+                    <h3 id="dashOrdersCount" class="text-2xl font-bold text-amber-400 mt-2">0</h3>
+                    <p class="text-xs text-slate-500 mt-1">En cours de traitement</p>
+                </div>
+            </div>
 
-        function mettreAJourEtatReseau() {
-            const statusDiv = document.getElementById('networkStatus');
-            if (navigator.onLine) {
-                statusDiv.style.backgroundColor = '#d4edda';
-                statusDiv.style.color = '#155724';
-                statusDiv.innerHTML = '🟢 Mode En Ligne (Connexion Active)';
-            } else {
-                statusDiv.style.backgroundColor = '#fff3cd';
-                statusDiv.style.color = '#856404';
-                statusDiv.innerHTML = '🔴 Mode Hors-Ligne (Fonctionnement Local Actif)';
-            }
-        }
-        window.addEventListener('online', mettreAJourEtatReseau);
-        window.addEventListener('offline', mettreAJourEtatReseau);
-        mettreAJourEtatReseau();
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- SoukBot Assistant Vocal / Texte -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-robot text-teal-400"></i> Assistant IA Vocal "SoukBot"
+                            </h2>
+                            <span class="text-xs bg-teal-500/20 text-teal-300 px-2.5 py-1 rounded-full">Arabe Tchadien & Français</span>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-4">Dictez ou écrivez votre commande en langage naturel (*ex: "Vends 2 licences Soukassou au client 68212627"*):</p>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="soukBotInput" placeholder="Ex: Enregistre une vente de 15000 FCFA..." class="flex-grow bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500">
+                            <button onclick="processSoukBotCommand()" class="bg-teal-600 hover:bg-teal-500 text-slate-900 font-bold px-5 py-2.5 rounded-xl text-sm transition shadow">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                            <button onclick="startVoiceRecognition()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm transition shadow" title="Parler à SoukBot">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <div id="soukBotOutput" class="bg-slate-900/80 border border-slate-700/60 p-4 rounded-xl text-sm text-slate-300 min-h-[80px] max-h-[140px] overflow-y-auto">
+                            SoukBot est à votre écoute... Prêt pour exécuter vos ordres commerciaux.
+                        </div>
+                    </div>
+                </div>
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log('Soukassou Service Worker Enregistré !'))
-                .catch(err => console.log('Erreur Service Worker :', err));
-        }
+                <!-- Raccourcis & Actions Rapides -->
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Actions Rapides
+                        </h2>
+                        <div class="space-y-2.5">
+                            <button onclick="switchTab('pos')" class="w-full bg-slate-900 hover:bg-slate-700/80 border border-slate-700 p-3 rounded-xl text-left text-sm font-medium flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-cash-register text-emerald-400"></i> Nouvelle Vente Caisse</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                            </button>
+                            <button onclick="switchTab('bills')" class="w-full bg-slate-900 hover:bg-slate-700/80 border border-slate-700 p-3 rounded-xl text-left text-sm font-medium flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-indigo-400"></i> Émettre Facture / Versement</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                            </button>
+                            <button onclick="switchTab('subscriptions')" class="w-full bg-slate-900 hover:bg-slate-700/80 border border-slate-700 p-3 rounded-xl text-left text-sm font-medium flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-calendar-check text-teal-400"></i> Encaisser Mensualité</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                            </button>
+                            <button onclick="exportSoukassouBackup()" class="w-full bg-slate-900 hover:bg-slate-700/80 border border-slate-700 p-3 rounded-xl text-left text-sm font-medium flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-download text-amber-400"></i> Sauvegarde JSON Soukassou</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        function validerTransactionHorsLigne(event) {
-            event.preventDefault();
+        <!-- 2. ONGLET CAISSE & VENTES (POS) -->
+        <section id="tab-pos" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Catalogue Articles / Produits -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-box text-emerald-400"></i> Catalogue Produits & Services
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="posSearch" placeholder="Rechercher un article..." oninput="filterPosCatalog()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                            <button onclick="openAddProductModal()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-bold px-3 py-1.5 rounded-xl text-sm transition">
+                                <i class="fa-solid fa-plus"></i> Article
+                            </button>
+                        </div>
+                    </div>
+                    <div id="posCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-2">
+                        <!-- Généré par JS -->
+                    </div>
+                </div>
 
-            const clientPhone = document.getElementById('phone').value.trim();
-            const operator = document.getElementById('operator').value;
-            const txId = document.getElementById('txId').value.trim();
-            const amountSubmitted = parseInt(document.getElementById('amount').value);
+                <!-- Panier & Encaissement -->
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-cart-shopping text-emerald-400"></i> Panier Actif
+                        </h2>
+                        <div id="cartItemsList" class="space-y-2 mb-4 max-h-[250px] overflow-y-auto pr-1">
+                            <p class="text-xs text-slate-500 text-center py-8">Votre panier est vide</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-700 pt-4 space-y-3">
+                        <div class="flex justify-between text-sm text-slate-400">
+                            <span>Sous-total:</span>
+                            <span id="cartSubtotal">0 FCFA</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-slate-400">
+                            <span>Taxes / TVA (18%):</span>
+                            <span id="cartTax">0 FCFA</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-white">
+                            <span>Total à Payer:</span>
+                            <span id="cartTotal" class="text-emerald-400">0 FCFA</span>
+                        </div>
+                        <div class="space-y-2 pt-2">
+                            <select id="paymentMethod" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
+                                <option value="Espèces">Espèces (Cash)</option>
+                                <option value="Airtel Money">Airtel Money (23568212627)</option>
+                                <option value="Moov Money">Moov Money (23568212627)</option>
+                                <option value="Crédit / Mensualité">Vente à Crédit / Mensualité</option>
+                            </select>
+                            <input type="text" id="clientPhoneInput" placeholder="Téléphone Client (ex: 68212627)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
+                            <button onclick="checkoutSale()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-slate-900 font-bold py-3 rounded-xl shadow hover:opacity-90 transition">
+                                <i class="fa-solid fa-check-to-slot mr-2"></i> Valider l'Encaissement
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-            if (amountSubmitted !== MONTANT_STRICT) {
-                alert("❌ ERREUR : Montant non conforme !");
-                return;
-            }
+        <!-- 3. ONGLET VITRINE & MARCHÉ (MARKETPLACE) -->
+        <section id="tab-marketplace" class="tab-content hidden space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-globe text-indigo-400"></i> Vitrine & Marketplace Soukassou
+                    </h2>
+                    <p class="text-xs text-slate-400">Explorez les publications, publicités et entreprises partenaires au Tchad.</p>
+                </div>
+                <button onclick="openPublishAdModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-sm shadow transition">
+                    <i class="fa-solid fa-bullhorn mr-1.5"></i> Publier une Annonce / Pub
+                </button>
+            </div>
 
-            if (txId.length < 6) {
-                alert("❌ ERREUR : ID de transaction invalide.");
-                return;
-            }
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Fil d'actualités & Publicités -->
+                <div class="lg:col-span-2 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Publications & Actualités des Commerçants</h3>
+                    <div id="marketplaceAdsFeed" class="space-y-4">
+                        <!-- Dynamique JS -->
+                    </div>
+                </div>
 
-            let transactionsLocal = JSON.parse(localStorage.getItem('usedTxIds') || "[]");
-            if (transactionsLocal.includes(txId.toUpperCase())) {
-                alert("🚨 ANTI-FRAUDE : Cette référence a déjà été enregistrée localement !");
-                return;
-            }
-
-            const maintenant = new Date();
-            const dateHeureFormatted = maintenant.toLocaleDateString('fr-FR') + ' à ' + maintenant.toLocaleTimeString('fr-FR');
-
-            transactionsLocal.push(txId.toUpperCase());
-            localStorage.setItem('usedTxIds', JSON.stringify(transactionsLocal));
-
-            let historique = JSON.parse(localStorage.getItem('historiqueTransactions') || "[]");
-            historique.push({
-                date: dateHeureFormatted,
-                client: clientPhone,
-                operator: operator,
-                amount: amountSubmitted,
-                txId: txId
-            });
-            localStorage.setItem('historiqueTransactions', JSON.stringify(historique));
-
-            const rapportText = `*RAPPORT SOUKASSOU*\nDate : ${dateHeureFormatted}\nClient : ${clientPhone}\nRéseau : ${operator}\nMontant : ${amountSubmitted} FCFA\nID TX : ${txId}`;
-
-            if (navigator.onLine) {
-                alert("✅ Transaction validée ! Redirection WhatsApp...");
-                const urlWhatsApp = `https://wa.me/${MON_NUMERO_TELEPHONE}?text=${encodeURIComponent(rapportText)}`;
-                window.open(urlWhatsApp, '_blank');
-            } else {
-                alert(`✅ TRANSACTION ENREGISTRÉE EN MODE HORS-LIGNE !\n\nL'application ouvre les SMS pour transmettre le rapport au +23568212627.`);
-                window.location.href = `sms:+${MON_NUMERO_TELEPHONE}?body=${encodeURIComponent(rapportText)}`;
-            }
-        }
-
-        function seConnecterAdmin() {
-            const mdp = prompt("Mot de passe Administrateur Soukassou :");
-            if (mdp === MOT_DE_PASSE_ADMIN) {
-                const historique = JSON.parse(localStorage.getItem('historiqueTransactions') || "[]");
-                alert(`🔓 Administration Soukassou (Hors-Ligne) :\n\n- Total Transactions Enregistrées : ${historique.length}`);
-            } else if (mdp !== null) {
-                alert("Accès refusé.");
-            }
-        }
-    </script>
-</body>
-          </html>
-              
+                <!-- Boutiques & GPS Locator -->
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow space-y-4">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Boutiques & Géolocalisation GPS</h3>
+                    <button onclick="getCurrentGPSLocation()" class="w-full bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded-xl text-sm font-medium text-emerald-400 flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-location-crosshairs"></i> Obtenir ma Position GPS Libre
+                    </button>
+                    <div id="gpsResultBox" class="bg-slate-900/80 border border-slate-700/60 p-3 rounded-xl text-xs text-slate-300 space-y-1">
+                        <p>Latitude / Longitude: <span id="gpsCoordsText" class="font-mono text-white">Non détecté</span></p>
+                        <p>Précision: <span id="gpsAc
