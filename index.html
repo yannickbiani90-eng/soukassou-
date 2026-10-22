@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soukassou - Application Hors-Ligne</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#28a745">
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px;">
+
+    <!-- BARRE D'ÉTAT DU RÉSEAU -->
+    <div id="networkStatus" style="text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 15px; background-color: #d4edda; color: #155724;">
+        🟢 Mode En Ligne
+    </div>
+
+    <!-- BLOC PRINCIPAL SOUKASSOU -->
+    <div class="payment-section" style="max-width: 450px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        
+        <div style="text-align: center; margin-bottom: 15px;">
+            <span style="background-color: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+                ⚡ 100% Fonctionnel Hors-Ligne
+            </span>
+        </div>
+
+        <h2 style="margin-top: 5px; color: #2c3e50; text-align: center;">Soukassou</h2>
+        <p style="text-align: center; font-size: 13px; color: #666; margin-bottom: 20px;">Plateforme de Virement & Validation Sécurisée</p>
+        
+        <!-- Coordonnées Marchand -->
+        <div style="background-color: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #28a745;">
+            <small style="color: #666;">Bénéficiaire Officiel :</small><br>
+            <strong style="font-size: 1.1em; color: #1b5e20;">+235 68 21 26 27</strong> (Airtel / Moov)
+        </div>
+
+        <form id="paymentForm" onsubmit="validerTransactionHorsLigne(event)">
+            
+            <!-- Numéro du Client -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Votre numéro de téléphone :</label>
+                <input type="tel" id="phone" placeholder="ex: 68212627" required pattern="^[0-9]{8,12}$" style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+            </div>
+
+            <!-- Opérateur Mobile Money -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Réseau Mobile Money :</label>
+                <select id="operator" required style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; background-color: #fff;">
+                    <option value="">-- Choisir le réseau --</option>
+                    <option value="Airtel Money">Airtel Money Tchad (*150#)</option>
+                    <option value="Moov Money">Moov Money Tchad / Flooz (*800#)</option>
+                </select>
+            </div>
+
+            <!-- ID / Référence SMS -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">ID / Réf. Transaction SMS <span style="color: red;">*</span> :</label>
+                <input type="text" id="txId" placeholder="ex: TXN123456789 ou MP261022.0001" required style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+                <small style="color: #666; font-size: 11px;">Entrez la référence reçue par SMS.</small>
+            </div>
+
+            <!-- Montant Verrouillé -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Montant fixe contrôlé (FCFA) :</label>
+                <input type="number" id="amount" value="14990" readonly style="width: 100%; padding: 11px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; background-color: #e9ecef; font-weight: bold; color: #495057;">
+            </div>
+
+            <!-- Bouton Validation -->
+            <button type="submit" id="submitBtn" style="width: 100%; background-color: #28a745; color: white; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer;">
+                🔒 Valider Hors-Ligne / En Ligne
+            </button>
+        </form>
+    </div>
+
+    <!-- ACCÈS ADMINISTRATEUR -->
+    <div style="text-align: center; margin-top: 30px;">
+        <button onclick="seConnecterAdmin()" style="background: none; border: none; color: #aaa; font-size: 11px; cursor: pointer; text-decoration: underline;">
+            🔐 Administration Soukassou (Local)
+        </button>
+    </div>
+
+    <!-- SCRIPT HORS-LIGNE -->
+    <script>
+        const MON_NUMERO_TELEPHONE = "23568212627";
+        const MONTANT_STRICT = 14990;
+        const MOT_DE_PASSE_ADMIN = "28121955@Uy";
+
+        function mettreAJourEtatReseau() {
+            const statusDiv = document.getElementById('networkStatus');
+            if (navigator.onLine) {
+                statusDiv.style.backgroundColor = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.innerHTML = '🟢 Mode En Ligne (Connexion Active)';
+            } else {
+                statusDiv.style.backgroundColor = '#fff3cd';
+                statusDiv.style.color = '#856404';
+                statusDiv.innerHTML = '🔴 Mode Hors-Ligne (Fonctionnement Local Actif)';
+            }
+        }
+        window.addEventListener('online', mettreAJourEtatReseau);
+        window.addEventListener('offline', mettreAJourEtatReseau);
+        mettreAJourEtatReseau();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Soukassou Service Worker Enregistré !'))
+                .catch(err => console.log('Erreur Service Worker :', err));
+        }
+
+        function validerTransactionHorsLigne(event) {
+            event.preventDefault();
+
+            const clientPhone = document.getElementById('phone').value.trim();
+            const operator = document.getElementById('operator').value;
+            const txId = document.getElementById('txId').value.trim();
+            const amountSubmitted = parseInt(document.getElementById('amount').value);
+
+            if (amountSubmitted !== MONTANT_STRICT) {
+                alert("❌ ERREUR : Montant non conforme !");
+                return;
+            }
+
+            if (txId.length < 6) {
+                alert("❌ ERREUR : ID de transaction invalide.");
+                return;
+            }
+
+            let transactionsLocal = JSON.parse(localStorage.getItem('usedTxIds') || "[]");
+            if (transactionsLocal.includes(txId.toUpperCase())) {
+                alert("🚨 ANTI-FRAUDE : Cette référence a déjà été enregistrée localement !");
+                return;
+            }
+
+            const maintenant = new Date();
+            const dateHeureFormatted = maintenant.toLocaleDateString('fr-FR') + ' à ' + maintenant.toLocaleTimeString('fr-FR');
+
+            transactionsLocal.push(txId.toUpperCase());
+            localStorage.setItem('usedTxIds', JSON.stringify(transactionsLocal));
+
+            let historique = JSON.parse(localStorage.getItem('historiqueTransactions') || "[]");
+            historique.push({
+                date: dateHeureFormatted,
+                client: clientPhone,
+                operator: operator,
+                amount: amountSubmitted,
+                txId: txId
+            });
+            localStorage.setItem('historiqueTransactions', JSON.stringify(historique));
+
+            const rapportText = `*RAPPORT SOUKASSOU*\nDate : ${dateHeureFormatted}\nClient : ${clientPhone}\nRéseau : ${operator}\nMontant : ${amountSubmitted} FCFA\nID TX : ${txId}`;
+
+            if (navigator.onLine) {
+                alert("✅ Transaction validée ! Redirection WhatsApp...");
+                const urlWhatsApp = `https://wa.me/${MON_NUMERO_TELEPHONE}?text=${encodeURIComponent(rapportText)}`;
+                window.open(urlWhatsApp, '_blank');
+            } else {
+                alert(`✅ TRANSACTION ENREGISTRÉE EN MODE HORS-LIGNE !\n\nL'application ouvre les SMS pour transmettre le rapport au +23568212627.`);
+                window.location.href = `sms:+${MON_NUMERO_TELEPHONE}?body=${encodeURIComponent(rapportText)}`;
+            }
+        }
+
+        function seConnecterAdmin() {
+            const mdp = prompt("Mot de passe Administrateur Soukassou :");
+            if (mdp === MOT_DE_PASSE_ADMIN) {
+                const historique = JSON.parse(localStorage.getItem('historiqueTransactions') || "[]");
+                alert(`🔓 Administration Soukassou (Hors-Ligne) :\n\n- Total Transactions Enregistrées : ${historique.length}`);
+            } else if (mdp !== null) {
+                alert("Accès refusé.");
+            }
+        }
+    </script>
+</body>
+          </html>
+              
