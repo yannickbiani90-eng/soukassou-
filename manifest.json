@@ -1,0 +1,22 @@
+{
+  "short_name": "Soukassou",
+  "name": "Soukassou - Application SaaS",
+  "description": "Application de virement et validation de paiement Mobile Money au Tchad",
+  "start_url": "./index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#28a745",
+  "display": "standalone",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192/28a745/ffffff?text=Soukassou",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512/28a745/ffffff?text=Soukassou",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
